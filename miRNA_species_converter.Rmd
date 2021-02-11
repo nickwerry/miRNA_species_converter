@@ -19,7 +19,7 @@ params:
   output_file:
     label: "Output filename"
     input: "text"
-    value: "species_converter_input"
+    value: "species_converter_output"
     
     
     
