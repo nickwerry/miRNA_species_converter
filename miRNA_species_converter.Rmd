@@ -1,0 +1,60 @@
+---
+title: "miRNA_species_converter"
+author: "Nick Werry"
+date: "07/02/2021"
+output: html_document
+params:
+  input_species:
+      label: "Input species"
+      input: "text"
+      value: "bta"
+  output_species:
+      label: "Output species"
+      input: "text"
+      value: "hsa"
+  query_miRNAs:
+    label: "Input file"
+    input: "file"
+    value: "bta_miRs.xlsx"
+  output_file:
+    label: "Output filename"
+    input: "text"
+    value: "species_converter_input"
+    
+    
+    
+---
+```{r Libraries}
+library(miRBaseConverter)
+library(tidyverse)
+library(readxl)
+library(writexl)
+```
+
+```{r Load Input}
+query_miRNAs <- (read_xlsx(params$query_miRNAs))
+query_list <- as.list(query_miRNAs$Name)
+```
+
+```{r Download miRNA data from miRBase, cache = TRUE}
+input_miRNAs <- getAllMiRNAs(version="v22", type = "mature", species = params$input_species)
+output_miRNAs <- getAllMiRNAs(version="v22", type = "mature", species = params$output_species)
+```
+
+```{r Convert Results}
+query_seqs <- input_miRNAs %>%
+  filter(Name %in% query_list)
+
+converted_seqs <- output_miRNAs %>%
+  filter(Sequence %in% query_seqs$Sequence)
+
+final_output <- left_join(query_miRNAs, query_seqs, by = "Name") %>%
+  left_join(converted_seqs, by = "Sequence")
+
+final_output
+```
+
+```{r Save File, eval = (length(params$output_file) > 0)}
+write_xlsx(final_output, path = sprintf("%s.xlsx", params$output_file))
+```
+
